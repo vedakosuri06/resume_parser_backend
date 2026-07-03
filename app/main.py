@@ -1,6 +1,7 @@
 from fastapi import FastAPI, UploadFile, File, HTTPException, Form
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse, JSONResponse
+from pydantic import BaseModel
 import io
 
 from app.parser import extract_text
@@ -11,6 +12,11 @@ from app.ai_feedback import get_ai_feedback
 from app.job_match import calculate_job_match
 
 app = FastAPI(title="Resume Parser API")
+
+
+class JobMatchDataRequest(BaseModel):
+    resume_data: dict
+    job_description: str
 
 # ---------------------- CORS ----------------------
 
@@ -91,6 +97,15 @@ async def job_match(
         job_description
     )
 
+    return JSONResponse(content=match_result)
+
+
+@app.post("/job-match-data")
+async def job_match_data(payload: JobMatchDataRequest):
+    match_result = calculate_job_match(
+        payload.resume_data,
+        payload.job_description
+    )
     return JSONResponse(content=match_result)
 
 
